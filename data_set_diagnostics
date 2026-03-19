@@ -1,0 +1,53 @@
+import pandas as pd 
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import joblib 
+from scipy.optimize import curve_fit
+import matplotlib.animation as animation
+from pathlib import Path
+from progress.bar import Bar
+import time 
+
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+from tabpfn import TabPFNRegressor
+
+
+"""Importing data from CSV, sorting and cleaning """
+
+
+BASE_DIR = Path(__file__).resolve().parent
+ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data/ExoMDN_data_2023.csv")
+
+
+
+#Histogramm of planet radii 
+
+counts, bins = np.histogram(ExoMDN_data["planet_radius"],100)
+plt.figure(figsize=(10, 8))  
+plt.stairs(counts, bins)
+plt.ylabel("Number of planets in data set", fontsize=12)
+plt.xlabel("Radius of planet in Earth radii", fontsize=12)
+plt.savefig(BASE_DIR  / "data/Plots/data_set_vizualization/R_histogramm.pdf")
+plt.show()
+
+#Histogramm of planet Masses 
+
+counts, bins = np.histogram(ExoMDN_data["planet_mass"],100)
+plt.figure(figsize=(10, 8))  
+plt.stairs(counts, bins)
+plt.ylabel("Number of planets in data set", fontsize=12)
+plt.xlabel("Mass of planet in Earth masses", fontsize=12)
+plt.savefig(BASE_DIR  / "data/Plots/data_set_vizualization/M_histogramm.pdf")
+plt.show()
+#repartition of planets in R,M space 
+plt.figure(figsize=(10, 8))
+ax = plt.gca()
+ax.scatter(ExoMDN_data["planet_radius"],ExoMDN_data["planet_mass"],marker = ".", color = "teal",s =0.05)
+plt.title(f"M_R repartition of planets in the data set")
+plt.ylabel("M[M_Earth] ", fontsize=12)
+plt.xlabel("R[R_Earth]", fontsize=12)
+plt.savefig(BASE_DIR  / "data/Plots/data_set_vizualization/M_R.pdf")
+
+plt.show()
