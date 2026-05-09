@@ -17,10 +17,11 @@ from tabpfn import TabPFNRegressor
 """Importing data from CSV, sorting and cleaning """
 
 
-BASE_DIR = Path(__file__).resolve().parent
-ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data/ExoMDN_data_2023.csv")
+BASE_DIR = Path(__file__).resolve().parent.parent
+ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
 print(ExoMDN_data.columns)
-interior_data = ExoMDN_data.iloc[0:500,3:17]
+interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
+
 print(ExoMDN_data.shape)
 print(interior_data.shape)
 
@@ -31,19 +32,20 @@ print(interior_data.shape)
     test_size=  0.1,
     random_state= 42,
 )"""
-interior_test = ExoMDN_data.iloc[3000:4000,3:17]
-radius_test = ExoMDN_data.iloc[3000:4000,2]
-
+print(interior_data.shape)
+interior_test = interior_data.iloc[3000:10000]
+radius_test = ExoMDN_data.iloc[3000:10000,2]
+print(interior_test.shape)
 #Intialize the TabPFN regressor 
 
-t1= time.clock_gettime(0)
+t1=  time.perf_counter()
 
 reg = joblib.load(BASE_DIR /"tabpfn_save.pkl")
 
 
 #Make predictions about the observables with PFN 
 #important to do this in batches not to overload memory !! If we do a conatainer to be run on other machines maybe this needs to be taken into account ...
-t2 = time.clock_gettime(0)
+t2 =  time.perf_counter()
 
 batch_size = 100   # try 100–500 depending on memory
 predictions = []
@@ -55,7 +57,7 @@ for i in range(0, len(interior_test), batch_size):
     
 
 predictions = np.concatenate(predictions)
-t3 = time.clock_gettime(0)
+t3 =  time.perf_counter()
 
 #some time diagnostics on the predictions 
 print("Run_time for the initialization  from file : ",t2-t1)

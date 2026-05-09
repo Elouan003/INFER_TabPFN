@@ -19,14 +19,14 @@ from sklearn.model_selection import train_test_split
 BASE_DIR = Path(__file__).resolve().parent.parent 
 
 ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
-print(ExoMDN_data.head())
-print(ExoMDN_data.shape)
 radius_data = ExoMDN_data["planet_radius"]
-interior_data = ExoMDN_data.iloc[:,3:17]
+interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
 
 
-print(interior_data.shape)
-print(radius_data.shape)
+mf_cols = ["atmosphere_mf", "water_mf", "mantle_mf", "core_mf"]
+sums = ExoMDN_data[mf_cols].sum(axis=1)
+print(sums.describe())
+print(sums.head(20))
 
 X = interior_data.values 
 Y = radius_data.values 
@@ -45,7 +45,7 @@ dtest  = xgb.DMatrix(X_test,  label=y_test)
 """loading model """
 
 model = xgb.Booster()
-model.load_model(BASE_DIR/ "XG_boost_trained.json")
+model.load_model(BASE_DIR/ "XG_boost_trained_v1.json")
 
 """predictions """
 t0 = time.perf_counter()
@@ -58,16 +58,27 @@ t1 = time.perf_counter()
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
 ax.plot(y_test,y_test,color = "plum",label = "1:1 line")
-ax.scatter(y_test,y_pred,marker = ".", color = "teal")
+ax.scatter(y_test,y_pred,marker = ".", color = "teal",alpha=0.01)
 plt.title("XG_Boost predicted planet_radius vs test values")
 plt.ylabel("planet_radius predicted by XGBoost in given units", fontsize=12)
 plt.xlabel("Validation planet_radius in given units", fontsize=12)
 plt.legend()
+plt.savefig(BASE_DIR / "data/plots/xg_boost_RR_plot_atm_mf")
 plt.show()
-plt.savefig(BASE_DIR / "data/plots/xg_boost_RR_plot")
 
 
+"""Error histogramm plot"""
+plt.figure()
+plt.hist(y_test-y_pred, bins=100, alpha=0.7, label="error in R_earth")
+plt.show()
 
 
 """Speed testing"""
 print(f"time for {len(y_test)} preds = {t1-t0} s  or {(t1-t0)/len(y_test)*1000} ms per prediction")
+
+
+"MSE and precision "
+
+print("Mean Squared Error (MSE):", mean_squared_error(y_test, y_pred))
+print("Mean Absolute Error (MAE):", mean_absolute_error(y_test, y_pred))
+print("R-squared (R^2):", r2_score(y_test, y_pred))

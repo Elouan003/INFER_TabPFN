@@ -18,9 +18,9 @@ from tabpfn import TabPFNRegressor
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent 
-ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data/ExoMDN_data_2023.csv")
+ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
 print(ExoMDN_data.columns)
-interior_data = ExoMDN_data.iloc[0:3000,3:17]
+interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
 print(ExoMDN_data.shape)
 print(interior_data.shape)
 
@@ -33,20 +33,20 @@ interior_train, interior_test, radius_train, radius_test = train_test_split(
     random_state= 42,
 )""" 
 
-interior_train = ExoMDN_data.iloc[0:3500,3:17]
-interior_test = ExoMDN_data.iloc[3000:3500,3:17]
+interior_train = interior_data.iloc[0:3500]
+interior_test = interior_data.iloc[3000:3500]
 obs_train= ExoMDN_data.iloc[3000:3500,0:2]
 obs_test =ExoMDN_data.iloc[3000:3500,0:2]
 radius_train = ExoMDN_data.iloc[0:3500,2]
 radius_test = ExoMDN_data.iloc[3000:3500,2]
 
 #Intialize the TabPFN regressor and save the regressor to file 
-t1 = time.clock_gettime(0)
+t1 =  time.perf_counter()
 reg = TabPFNRegressor()
-reg.fit(obs_train,interior_train)
-t2 = time.clock_gettime(0)
+reg.fit(interior_train,radius_train)
+t2 = time.perf_counter()
 joblib.dump(reg, "tabpfn_save.pkl")
-t3 = time.clock_gettime(0)
+t3 =  time.perf_counter()
 
 
 #Make predictions about the observables with PFN 
@@ -55,13 +55,13 @@ batch_size = 200   # try 100–500 depending on memory
 predictions = []
 
 for i in range(0, len(obs_test), batch_size):
-        batch = obs_test[i:i + batch_size]
+        batch = interior_test[i:i + batch_size]
         preds = reg.predict(batch)
         predictions.append(preds)
     
 
 predictions = np.concatenate(predictions)
-t4 = time.clock_gettime(0)
+t4 =  time.perf_counter()
 
 
 print("Run_time for the initialization of the regressor : ",t2-t1)
@@ -110,6 +110,6 @@ plt.show()
 """
 
 #Error diagnostics 
-print("Mean Squared Error (MSE):", mean_squared_error(obs_test, predictions))
-print("Mean Absolute Error (MAE):", mean_absolute_error(obs_test, predictions))
-print("R-squared (R^2):", r2_score(obs_test, predictions))
+print("Mean Squared Error (MSE):", mean_squared_error(radius_test, predictions))
+print("Mean Absolute Error (MAE):", mean_absolute_error(radius_test, predictions))
+print("R-squared (R^2):", r2_score(radius_test, predictions))

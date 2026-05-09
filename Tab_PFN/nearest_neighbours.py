@@ -33,8 +33,8 @@ def progress_bar(current, total, bar_length=20):
 """Importing data and defining paths"""
 BASE_DIR = Path(__file__).resolve().parent.parent 
 
-ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data/ExoMDN_data_2023.csv")
-
+ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
+interior_data  =  ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
 
 
 
@@ -47,9 +47,9 @@ print(M_R_array.shape)
 
 #This function returns the  indexes of the n closest neighbours of the given planet in the parameter space (R,M,T_eq) 
 # and the distance to these neighbours in the param space 
-t10 =   time.clock_gettime(0)
+t10 =   time.perf_counter()
 Tree = BallTree(M_R_array, leaf_size=40)
-t11 =   time.clock_gettime(0)
+t11 =   time.perf_counter()
 
 print("timt to build tree : ",t11-t10, " seconds ")
 def Neighbours(planet, tree, n=500):
@@ -187,7 +187,7 @@ plt.show()
 test_indices = random.choices(range(0,ExoMDN_data.shape[0]),k=100) #selects a hundred planets from the data set to be used as validation throught the run 
 radius_test = ExoMDN_data.iloc[test_indices,2]
 planets_test = ExoMDN_data.iloc[test_indices,[0,2]]
-interior_test = ExoMDN_data.iloc[test_indices,3:17]
+interior_test = interior_data.iloc[test_indices]
 print(radius_test.shape)
 print(interior_test.shape)
 
@@ -208,18 +208,18 @@ initialize_time = []
 print("Computing predictions with random training set ")
 for i in range (100) : 
     
-    t1 = time.clock_gettime(0)
+    t1 = time.perf_counter()
     random_indices = random.choices(range(0,ExoMDN_data.shape[0]),k=500)
-    random_interior_train = ExoMDN_data.iloc[random_indices,3:17]
+    random_interior_train = interior_data.iloc[random_indices]
     random_radius_train = ExoMDN_data.iloc[random_indices,2]
 
     reg = TabPFNRegressor()
     reg.fit(random_interior_train,random_radius_train) #only in one dimension for radius !! 
 
 
-    t2 = time.clock_gettime(0)
+    t2 = time.perf_counter()
     prediction = reg.predict(interior_test.iloc[[i]])
-    t3 = time.clock_gettime(0)
+    t3 = time.perf_counter()
     predictions.append(prediction)
     initialize_time.append(t2-t1)
     prediction_time.append(t3-t2)
@@ -245,18 +245,18 @@ initialize_time = []
 print("Computing predictions with closest neighbours ")
 for i in range (100) : 
     
-    t1 = time.clock_gettime(0)
+    t1 = time.perf_counter()
     neighbour_distances,neighbour_indices = Neighbours(planets_test.iloc[i],Tree) 
     #can not use radius test here we need the planet argument to be 2 dim 
     #with Mass and Radius 
-    neighbour_interior_train = ExoMDN_data.iloc[neighbour_indices[0],3:17]
+    neighbour_interior_train = interior_data.iloc[neighbour_indices[0]]
     neighbour_radius_train = ExoMDN_data.iloc[neighbour_indices[0],2]
    
     reg = TabPFNRegressor()
     reg.fit(neighbour_interior_train,neighbour_radius_train)
-    t2 = time.clock_gettime(0)
+    t2 = time.perf_counter()
     prediction = reg.predict(interior_test.iloc[[i]])
-    t3 = time.clock_gettime(0)
+    t3 = time.perf_counter()
     
     predictions.append(prediction)
     initialize_time.append(t2-t1)
@@ -282,17 +282,17 @@ initialize_time = []
 print("Computing predictions with random points in close neighbourhood  ")
 for i in range (100) : 
     
-    t1 = time.clock_gettime(0)
+    t1 = time.perf_counter()
     neighbour_indices = random_in_subset(planets_test.iloc[i],Tree)
 
-    neighbour_interior_train = ExoMDN_data.iloc[neighbour_indices,3:17]
+    neighbour_interior_train = interior_data.iloc[neighbour_indices]
     neighbour_radius_train = ExoMDN_data.iloc[neighbour_indices,2]
    
     reg = TabPFNRegressor()
     reg.fit(neighbour_interior_train,neighbour_radius_train)
-    t2 = time.clock_gettime(0)
+    t2 = time.perf_counter()
     prediction = reg.predict(interior_test.iloc[[i]])
-    t3 = time.clock_gettime(0)
+    t3 = time.perf_counter()
     predictions.append(prediction)
     initialize_time.append(t2-t1)
     prediction_time.append(t3-t2)

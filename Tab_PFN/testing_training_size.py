@@ -9,7 +9,7 @@ import matplotlib.animation as animation
 from pathlib import Path
 from progress.bar import Bar
 
-
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from tabpfn import TabPFNRegressor
 
@@ -18,10 +18,9 @@ from tabpfn import TabPFNRegressor
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent 
-
-#ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data/ExoMDN_data_2023.csv")
+ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
 #print(ExoMDN_data.columns)
-
+interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
 #print(ExoMDN_data.shape)
 #print(interior_data.shape)
 
@@ -33,7 +32,7 @@ testing_time = []
 R2_array = []
 MSE_array = []
 
-for i in range (1,300) :
+for i in range (1,1000) :
     if (i%10 == 0 ): 
           print("Proress ", i/300*100, "%")
     #Building training sets of increasing size from 10 to 3000 in steps of 10 
@@ -41,17 +40,17 @@ for i in range (1,300) :
     #interior_data = ExoMDN_data.iloc[0:training_size,3:17]
     #R_data  = ExoMDN_data.iloc[0:3000,2]
 
-    interior_train = ExoMDN_data.iloc[0:training_size,3:17]
-    interior_test = ExoMDN_data.iloc[training_size:training_size+200,3:17]
+    interior_train = interior_data.iloc[0:training_size]
+    interior_test = interior_data.iloc[training_size:training_size+200]
     radius_train = ExoMDN_data.iloc[0:training_size,2]
     radius_test = ExoMDN_data.iloc[training_size:training_size+200,2]
 
 
     #Intialize the TabPFN regressor and running the predictions for the given training size 
-    t1 = time.clock_gettime(0)
+    t1 = time.perf_counter()
     reg = TabPFNRegressor()
     reg.fit(interior_train,radius_train)
-    t2 = time.clock_gettime(0)
+    t2 = time.perf_counter()
     
     #important to do this in batches not to overload memory !! If we do a conatainer to be run on other machines maybe this needs to be taken into account ...
     batch_size = 200   # try 100–500 depending on memory
@@ -64,7 +63,7 @@ for i in range (1,300) :
         
 
     predictions = np.concatenate(predictions)
-    t3 = time.clock_gettime(0)
+    t3 = time.perf_counter()
     fitting_time.append(t2-t1)
     testing_time.append(t3-t2)
     R2_array.append(r2_score(radius_test, predictions))

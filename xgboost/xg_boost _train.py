@@ -20,9 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
 print(ExoMDN_data.head())
-print(ExoMDN_data.shape)
+
+
 radius_data = ExoMDN_data["planet_radius"]
-interior_data = ExoMDN_data.iloc[:,3:17]
+interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
 
 
 print(interior_data.shape)
@@ -42,7 +43,7 @@ dval   = xgb.DMatrix(X_val,   label=y_val)
 dtest  = xgb.DMatrix(X_test,  label=y_test)
 
 params = {
-    "objective":        "reg:squarederror",  # régression standard
+    "objective":        "reg:squarederror",  # Standard regression
     "eval_metric":      "rmse",
     "learning_rate":    0.05,
     "max_depth":        6,
@@ -50,7 +51,7 @@ params = {
     "colsample_bytree": 0.8,
     "min_child_weight": 3,
     "tree_method":      "hist",   # rapide sur CPU
-    "device":         "cuda",   # ← décommenter si GPU dispo
+    "device":         "cuda",   # for GPU use 
     "seed":             42,
 }
 
@@ -77,7 +78,7 @@ model = xgb.train(
     dtrain,
     num_boost_round=2000,
     evals=[(dtrain, "train"), (dval, "eval")],
-    early_stopping_rounds=50,
+    early_stopping_rounds=100,
     verbose_eval=False,  # désactiver le verbose natif
     callbacks=[TqdmCallback(total=2000)],
 )
@@ -91,4 +92,4 @@ print(f"RMSE: {rmse:.4f} | R²: {r2:.4f}")
 # Feature importance (utile pour valider la physique)
 xgb.plot_importance(model, importance_type="gain")
 
-model.save_model("XG_boost_trained.json")
+model.save_model("XG_boost_trained_v1.json")
