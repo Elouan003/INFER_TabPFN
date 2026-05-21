@@ -27,14 +27,15 @@ interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
 
 
 """  ___________________________Testing how much the precision scales with the size of the sample used for the first fit_______________________"""
-"""fitting_time = []
+"""
+fitting_time = []
 testing_time = []
 R2_array = []
 MSE_array = []
 
 for i in range (1,1000) :
     if (i%10 == 0 ): 
-          print("Proress ", i/300*100, "%")
+          print("Proress ", i/200*100, "%")
     #Building training sets of increasing size from 10 to 3000 in steps of 10 
     training_size = i*10
     #interior_data = ExoMDN_data.iloc[0:training_size,3:17]
@@ -89,25 +90,24 @@ testing_time = data["b"]
 R2_array= data["c"]
 MSE_array = data["d"]
 
-training_size_array = np.linspace(1,300,299)*10
+training_size_array = np.linspace(1,1000,999)*10
 
 
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
 ax.scatter(training_size_array,fitting_time,marker = ".", color = "teal")
-plt.title(f"Fitting time for given fitting sample size ")
-plt.ylabel("Fitiing time [s]", fontsize=12)
-plt.xlabel("Size of training sample", fontsize=12)
+plt.title(f"TabPFN \n Fitting time for given fitting sample size ",fontsize=16)
+plt.ylabel("Fitiing time [s]", fontsize=16)
+plt.xlabel("Size of training sample", fontsize=16)
 plt.savefig( BASE_DIR / "data/Plots/Fitting_time.png")
 plt.show()
-
 
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
 ax.scatter(training_size_array,testing_time,marker = ".", color = "teal")
-plt.title(f"Prediction time for given fiting sample size")
-plt.ylabel("prediction time for one point [s]", fontsize=12)
-plt.xlabel("Size of training sample", fontsize=12)
+plt.title(f"TabPFN \n Prediction time for given fiting sample size",fontsize=16)
+plt.ylabel("prediction time for one point [s]", fontsize=16)
+plt.xlabel("Size of training sample", fontsize=16)
 plt.savefig(BASE_DIR / "data/Plots/Prediction_time.png")
 plt.show()
 
@@ -115,9 +115,9 @@ plt.show()
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
 ax.scatter(training_size_array,MSE_array,marker = ".", color = "teal")
-plt.title(f"MSE for given fitting sample size")
-plt.ylabel("Mean squared error [R_Earth]", fontsize=12)
-plt.xlabel("Size of training sample", fontsize=12)
+plt.title(f"TabPFN \n MSE for given fitting sample size ",fontsize=16)
+plt.ylabel("Mean squared error [R_Earth]", fontsize=16)
+plt.xlabel("Size of training sample", fontsize=16)
 plt.savefig(BASE_DIR  / "data/Plots/MSE.png")
 plt.show()
 
@@ -125,11 +125,10 @@ plt.show()
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
 ax.scatter(training_size_array,R2_array,marker = ".", color = "teal")
-plt.title(f"R^2 for given training sample size")
-plt.ylabel("R squared", fontsize=12)
-plt.xlabel("Size of training sample", fontsize=12)
+plt.title(f"TabPFN \n R^2 for given training sample size",fontsize=16)
+plt.ylabel("R squared", fontsize=16)
+plt.xlabel("Size of training sample", fontsize=16)
 plt.savefig(BASE_DIR  / "data/Plots/R2.png")
-
 plt.show()
 
 

@@ -9,7 +9,8 @@ import matplotlib.animation as animation
 from pathlib import Path
 from sklearn.neighbors import BallTree
 from tabpfn import TabPFNRegressor
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
+from sklearn.model_selection import train_test_split
 """ Progress bar for fun """
 # Source - https://stackoverflow.com/a/37630397
 # Posted by Aravind Voggu, modified by community. See post 'Timeline' for change history
@@ -34,11 +35,21 @@ def progress_bar(current, total, bar_length=20):
 BASE_DIR = Path(__file__).resolve().parent.parent 
 
 ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
-interior_data  =  ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
+interior_data  =  ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf","T_eq"]]
+radius_data = ExoMDN_data["planet_radius"]
 
-
-
-M_R_df = ExoMDN_data.iloc[:,[0,2]]# for now only mass and radius but need to consider interoir temperatur too 
+"""Defining testing planets for all the different methods to make sure our results are consistent """
+"""
+test_indices = random.choices(range(0,ExoMDN_data.shape[0]),k=100) #selects a hundred planets from the data set to be used as validation throught the run 
+radius_test = ExoMDN_data.iloc[test_indices,2]
+planets_test = ExoMDN_data.iloc[test_indices,[0,2]]
+interior_test = interior_data.iloc[test_indices]
+print(radius_test.shape)
+print(interior_test.shape)
+interior_data.drop(test_indices, inplace=True)
+ExoMDN_data.drop(test_indices, inplace=True)
+"""
+M_R_df = ExoMDN_data.iloc[:,[0,2]]
 print(M_R_df.columns)
 M_R_array = M_R_df.to_numpy()
 print(M_R_array.shape)
@@ -64,7 +75,7 @@ def Neighbours(planet, tree, n=500):
 
 
 """ First test of the Neighbours function """
-
+"""
 
 planet = M_R_array[150]
 neighbour_distances,neighbour_indices = Neighbours(planet,Tree)
@@ -99,8 +110,9 @@ plt.xlim = (10,15)
 plt.ylim = (1.5,2.5)
 
 plt.show()
-
+"""
 """First test of the random in local space around point """
+
 def random_in_subset(planet, tree, n=500): 
     planet = np.atleast_2d(planet)
 
@@ -111,7 +123,7 @@ def random_in_subset(planet, tree, n=500):
     indices = indices_of_points_closeby[selection_indices]
     return  indices
 
-
+"""
 planet = M_R_array[150]
 neighbour_indices = random_in_subset(planet,Tree)
 
@@ -143,9 +155,10 @@ plt.xlim = (10,15)
 plt.ylim = (1.5,2.5)
 
 plt.show()
-
+"""
 
 """plot of random points in parameter space for illustration purposes """
+"""
 planet = M_R_array[150]
 neighbour_indices = random.choices(range(0,ExoMDN_data.shape[0]),k=500)
 
@@ -182,15 +195,7 @@ plt.show()
 
 
 
-"""Defining testing planets for all the different methods to make sure our results are consistent """
-
-test_indices = random.choices(range(0,ExoMDN_data.shape[0]),k=100) #selects a hundred planets from the data set to be used as validation throught the run 
-radius_test = ExoMDN_data.iloc[test_indices,2]
-planets_test = ExoMDN_data.iloc[test_indices,[0,2]]
-interior_test = interior_data.iloc[test_indices]
-print(radius_test.shape)
-print(interior_test.shape)
-
+"""
 
 """ We now test how much precision we gain and how much time it costs to make predictions with the 500 points selected in different ways such as 
 random in the whole set, radnom in a sphere, or 500 closest neighbors  """
@@ -200,7 +205,7 @@ random in the whole set, radnom in a sphere, or 500 closest neighbors  """
 #select testing sample that is the same for both methods 
 
 
-
+"""
 # First run as usual with 500 random points for the training set
 predictions = []
 prediction_time  = []
@@ -232,10 +237,14 @@ for i in range (100) :
 print("________Results for fitting on random 500 planets ________")
 print ("Time for 100 predictions : " ,np.sum(prediction_time)," or for each prediction :", np.average(prediction_time))
 print ("Time for 100 initializations(random) : " ,np.sum(initialize_time)," or for each initialization  :", np.average(initialize_time))
-print("The average MSE over the 100 planets is : ", mean_squared_error(radius_test, predictions))
+print("The average MAE over the 100 planets is : ", mean_absolute_error(radius_test, predictions))
+print("The average percentage error  over the 100 planets is : ", mean_absolute_percentage_error(radius_test, predictions))
 print("The R^2 score over the 100 planets is : ", r2_score(radius_test, predictions))
+"""
 
 """Closest neigbours"""
+
+"""
 # we use the same testing indices and testing sets for the resluts to be comparable and only change on what data we "train"  the model ! 
 predictions = []
 prediction_time  = []
@@ -267,10 +276,13 @@ for i in range (100) :
 print("________Results for traning on 500 closest neigbours from parameter space ________")
 print ("Time for 100 predictions : " ,np.sum(prediction_time)," or for each prediction :", np.average(prediction_time))
 print ("Time for 100 initializations(random) : " ,np.sum(initialize_time)," or for each initialization  :", np.average(initialize_time))
-print("The average MSE over the 100 planets is : ", mean_squared_error(radius_test, predictions))
-print("The R^2 score over the 100 planets is : ", r2_score(radius_test, predictions))
+print("The average MAE over the 100 planets is : ", mean_absolute_error(radius_test, predictions))
+print("The average percentage error  over the 100 planets is : ", mean_absolute_percentage_error(radius_test, predictions))
 
+print("The R^2 score over the 100 planets is : ", r2_score(radius_test, predictions))
+"""
 """Random selection in a given subset of parameter space"""
+"""
 print(planets_test.iloc[0])
 
 
@@ -301,5 +313,96 @@ for i in range (100) :
 print("________Results for traning on 500 random points in subspace close to planet in M_R space  ________")
 print ("Time for 100 predictions : " ,np.sum(prediction_time)," or for each prediction :", np.average(prediction_time))
 print ("Time for 100 initializations(random) : " ,np.sum(initialize_time)," or for each initialization  :", np.average(initialize_time))
-print("The average MSE over the 100 planets is : ", mean_squared_error(radius_test, predictions))
+print("The averageMAE over the 100 planets is : ", mean_absolute_error(radius_test, predictions))
+print("The average percentage error  over the 100 planets is : ", mean_absolute_percentage_error(radius_test, predictions))
+
 print("The R^2 score over the 100 planets is : ", r2_score(radius_test, predictions))
+"""
+
+"""Produce an R_R plot for the random points in neighbrhood """
+
+ExoMDN_data["atmosphere_mf_log"] = np.log10(ExoMDN_data["atmosphere_mf"])
+atm_mf_log = ExoMDN_data["atmosphere_mf_log"]
+
+
+X = interior_data.values 
+Y = radius_data.values 
+Z = M_R_df.values
+
+
+
+X_train, X_temp, y_train, y_temp,z_train,z_temp = train_test_split(X, Y, Z, test_size=0.1, random_state=42)
+X_val, X_test, y_val, y_test,z_val,z_test   = train_test_split(X_temp, y_temp,z_temp, test_size=0.01, random_state=42)
+# → ~5.4M training | ~570k validation | ~30k testing
+
+
+
+
+predictions = []
+prediction_time  = []
+print("Computing predictions with random points in close neighbourhood  ")
+for i,interior in enumerate(X_test) : 
+    
+    t1 = time.perf_counter()
+    M_R = Z[i]
+    neighbour_indices = random_in_subset(Z[i],Tree)
+
+    neighbour_interior_train = interior_data.iloc[neighbour_indices]
+    neighbour_radius_train = ExoMDN_data.iloc[neighbour_indices,2]
+    interior  =  interior.reshape(1,-1)
+    reg = TabPFNRegressor()
+    reg.fit(neighbour_interior_train,neighbour_radius_train)
+    t2 = time.perf_counter()
+    prediction = reg.predict(interior)
+    t3 = time.perf_counter()
+    predictions.append(prediction)
+
+    prediction_time.append(t3-t2)
+    progress_bar(i,len(X_test))
+
+
+np.savez("Tab_PFN_pred001.npz", a = y_test,b = predictions)# Tab_PFN_pred.npz
+
+
+data = np.load("Tab_PFN_pred001.npz")
+y_test = data["a"]
+predictions = data["b"][:,0]
+
+
+rel_error = np.abs(predictions-y_test)/y_test
+print("mean rel error",np.mean(rel_error))
+plt.figure(figsize=(10, 9))
+ax = plt.gca()
+ax.plot(y_test,y_test,color = "plum",label = "1:1 line")
+scatter = ax.scatter(y_test,predictions,marker = ".",s=2,c =rel_error ,cmap = "inferno",alpha=0.5)
+plt.title("XG_Boost predicted planet_radius vs test values", fontsize=16)
+plt.colorbar(scatter, ax=ax, label="relative_error")
+plt.ylabel("planet_radius predicted by XGBoost in given units", fontsize=16)
+plt.xlabel("Validation planet_radius in given units", fontsize=16)
+plt.legend(fontsize=16)
+plt.savefig(BASE_DIR / "data/plots/tab_pfn_RR_plot_rel_error.png")
+plt.show()
+
+
+
+
+log_atm = np.log10(X_test[:,0])
+plt.figure(figsize=(10, 9))
+ax = plt.gca()
+ax.plot(y_test,y_test,color = "plum",label = "1:1 line")
+scatter = ax.scatter(y_test,predictions,marker = ".",s=2,c = log_atm,cmap = "viridis",alpha=0.5)
+plt.title("XG_Boost predicted planet_radius vs test values", fontsize=16)
+plt.colorbar(scatter, ax=ax, label="Atmosphere mf")
+plt.ylabel("planet_radius predicted by XGBoost in given units", fontsize=16)
+plt.xlabel("Validation planet_radius in given units", fontsize=16)
+plt.legend(fontsize=16)
+plt.savefig(BASE_DIR / "data/plots/tab_pfn_RR_full.png")
+plt.show()
+
+counts, bins = np.histogram(y_test,20)
+plt.figure(figsize=(10, 8))  
+plt.stairs(counts, bins)
+plt.ylabel("Number of planets in data set", fontsize=12)
+plt.xlabel("Radius of planet in Earth radii", fontsize=12)
+plt.savefig(BASE_DIR  / "data/plots/tab_pfn_subset_hist.png")
+plt.show()

@@ -18,7 +18,7 @@ from tabpfn import TabPFNRegressor
 
 
 BASE_DIR = Path(__file__).resolve().parent
-ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data/ExoMDN_data_2023.csv")
+ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
 
 
 """Review of different parameters"""
@@ -31,7 +31,7 @@ plt.figure(figsize=(10, 8))
 plt.stairs(counts, bins)
 plt.ylabel("Number of planets in data set", fontsize=12)
 plt.xlabel("Radius of planet in Earth radii", fontsize=12)
-plt.savefig(BASE_DIR  / "data/Plots/data_set_vizualization/R_histogramm.png")
+plt.savefig(BASE_DIR  / "data/plots/R_histogramm.png")
 plt.show()
 
 #Histogramm of planet Masses 
@@ -41,7 +41,7 @@ plt.figure(figsize=(10, 8))
 plt.stairs(counts, bins)
 plt.ylabel("Number of planets in data set", fontsize=12)
 plt.xlabel("Mass of planet in Earth masses", fontsize=12)
-plt.savefig(BASE_DIR  / "data/Plots/data_set_vizualization/M_histogramm.png")
+plt.savefig(BASE_DIR  / "data/plots/M_histogramm.png")
 plt.show()
 #repartition of planets in R,M space 
 plt.figure(figsize=(10, 8))
@@ -50,6 +50,6 @@ ax.scatter(ExoMDN_data["planet_radius"],ExoMDN_data["planet_mass"],marker = ".",
 plt.title(f"M_R repartition of planets in the data set")
 plt.ylabel("M[M_Earth] ", fontsize=12)
 plt.xlabel("R[R_Earth]", fontsize=12)
-plt.savefig(BASE_DIR  / "data/Plots/data_set_vizualization/M_R.png")
+plt.savefig(BASE_DIR  / "data/plots/M_R.png")
 
 plt.show()

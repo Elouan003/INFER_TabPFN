@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
 ExoMDN_sample = ExoMDN_data.sample(n=200_000, random_state=42)
 radius_data = ExoMDN_data["planet_radius"]
-interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
+interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf","T_eq"]]
 
 
 

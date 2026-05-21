@@ -51,7 +51,7 @@ def log_likelihood(interior_parameters,observed_parameters): # !! exterior param
     d_interior = xgb.DMatrix(interior_parameters.reshape(1, -1))   
     predicted_R  = model.predict(d_interior)[0]
     return -0.5 * ((predicted_R - observed_parameters[2]) / sigma)**2 #log probabilty as a gaussian around observed Radius 
-
+  
 def log_probability(interior_parameters,observed_parameters= np.array([1.081,112.269,1.140466]) ):
     #combines the likelihood function with consideration of constraints/prior on the interior parameters 
     lp = log_prior(interior_parameters)       # constraints on params 

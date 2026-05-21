@@ -21,11 +21,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ExoMDN_data = pd.read_csv(BASE_DIR  / "data/ExoMDN_data_2023.csv")
 print(ExoMDN_data.head())
 
-
+#remove bigger radii and see what effect it has on our predictions for small planets 
+#ExoMDN_data = ExoMDN_data[ExoMDN_data["planet_radius"]<4]
+ExoMDN_data["atmosphere_mf_log"] = np.log10(ExoMDN_data["atmosphere_mf"])
+#ExoMDN_data = ExoMDN_data[ExoMDN_data["atmosphere_mf_log"]>-6]
+#ExoMDN_data = ExoMDN_data[ExoMDN_data["atmosphere_mf_log"]<-5]
+#____________________________________________________________________________________________________________________________________
+plt.figure(figsize=(10, 9))
+plt.title("hist of atm mf log ", fontsize=16)
+plt.hist(ExoMDN_data["atmosphere_mf_log"], bins=100, alpha=0.7, label="error in R_earth",color = "teal")
+plt.xlabel("atm mf log ", fontsize=16)
+plt.savefig(BASE_DIR / "data/plots/xg_boost_error_hist.png")
+plt.show()
 radius_data = ExoMDN_data["planet_radius"]
-interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
+interior_data = ExoMDN_data[["atmosphere_mf_log","water_mf","mantle_mf","core_mf","T_eq"]]
 
-
+print(interior_data.head())
 print(interior_data.shape)
 print(radius_data.shape)
 
@@ -48,7 +59,9 @@ params = {
     "learning_rate":    0.05,
     "max_depth":        6,
     "subsample":        0.8,
-    "colsample_bytree": 0.8,
+    "colsample_bytree": 0.5,
+    "colsample_bylevel": 0.8,  # 80% des features par niveau
+    "colsample_bynode": 0.8,   # 80% des features par noeud
     "min_child_weight": 3,
     "tree_method":      "hist",   # rapide sur CPU
     "device":         "cuda",   # for GPU use 
@@ -92,4 +105,4 @@ print(f"RMSE: {rmse:.4f} | R²: {r2:.4f}")
 # Feature importance (utile pour valider la physique)
 xgb.plot_importance(model, importance_type="gain")
 
-model.save_model("XG_boost_trained_v1.json")
+model.save_model("XG_boost_trained_gain_test.json")
