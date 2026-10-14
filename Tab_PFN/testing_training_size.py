@@ -8,7 +8,7 @@ from scipy.optimize import curve_fit
 import matplotlib.animation as animation
 from pathlib import Path
 from progress.bar import Bar
-
+import random 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from tabpfn import TabPFNRegressor
@@ -24,27 +24,30 @@ interior_data = ExoMDN_data[["atmosphere_mf","water_mf","mantle_mf","core_mf"]]
 #print(ExoMDN_data.shape)
 #print(interior_data.shape)
 
-
+test_indices = random.choices(range(0,ExoMDN_data.shape[0]),k=200)
+   
+ExoMDN_data.drop(test_indices, inplace=True)
 
 """  ___________________________Testing how much the precision scales with the size of the sample used for the first fit_______________________"""
-"""
+
 fitting_time = []
 testing_time = []
 R2_array = []
 MSE_array = []
 
-for i in range (1,1000) :
+for i in range (1,100) :
     if (i%10 == 0 ): 
-          print("Proress ", i/200*100, "%")
+          print("Proress ", i/200*10, "%")
     #Building training sets of increasing size from 10 to 3000 in steps of 10 
     training_size = i*10
     #interior_data = ExoMDN_data.iloc[0:training_size,3:17]
     #R_data  = ExoMDN_data.iloc[0:3000,2]
-
-    interior_train = interior_data.iloc[0:training_size]
-    interior_test = interior_data.iloc[training_size:training_size+200]
-    radius_train = ExoMDN_data.iloc[0:training_size,2]
-    radius_test = ExoMDN_data.iloc[training_size:training_size+200,2]
+   
+    train_indices = random.choices(range(0,ExoMDN_data.shape[0]),k=training_size)
+    interior_train = interior_data.iloc[train_indices]
+    interior_test = interior_data.iloc[test_indices]
+    radius_train = ExoMDN_data.iloc[train_indices,2]
+    radius_test = ExoMDN_data.iloc[test_indices,2]
 
 
     #Intialize the TabPFN regressor and running the predictions for the given training size 
@@ -81,55 +84,56 @@ for i in range (1,1000) :
 
 
 #Plotting the different diagnostics for each training samople size 
-np.savez("arrays.npz", a=fitting_time, b=testing_time, c=R2_array,d=MSE_array)# done and saved to arrays.npz
-"""
-data = np.load("arrays.npz")
+np.savez("arrays2.npz", a=fitting_time, b=testing_time, c=R2_array,d=MSE_array)# done and saved to arrays.npz
+
+data = np.load("arrays2.npz")
 
 fitting_time = data["a"]
 testing_time = data["b"]
 R2_array= data["c"]
 MSE_array = data["d"]
+print(fitting_time.shape)
+print(testing_time.shape)
+training_size_array = np.linspace(1,1000,99)
 
-training_size_array = np.linspace(1,1000,999)*10
-
-
+"""
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
-ax.scatter(training_size_array,fitting_time,marker = ".", color = "teal")
-plt.title(f"TabPFN \n Fitting time for given fitting sample size ",fontsize=16)
-plt.ylabel("Fitiing time [s]", fontsize=16)
-plt.xlabel("Size of training sample", fontsize=16)
+ax.scatter(training_size_array,fitting_time,marker = ".",color=plt.cm.viridis(0.5))
+plt.title(f"TabPFN \n Fitting time for given fitting sample size ",fontsize=20)
+plt.ylabel("Fitting time [s]", fontsize=18)
+plt.xlabel("Size of fitting sample", fontsize=18)
 plt.savefig( BASE_DIR / "data/Plots/Fitting_time.png")
 plt.show()
-
+"""
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
-ax.scatter(training_size_array,testing_time,marker = ".", color = "teal")
-plt.title(f"TabPFN \n Prediction time for given fiting sample size",fontsize=16)
-plt.ylabel("prediction time for one point [s]", fontsize=16)
-plt.xlabel("Size of training sample", fontsize=16)
-plt.savefig(BASE_DIR / "data/Plots/Prediction_time.png")
+ax.scatter(training_size_array,testing_time,marker = ".",color=plt.cm.viridis(0.5))
+plt.title(f"TabPFN \n Prediction time for given fiting sample size",fontsize=20)
+plt.ylabel("Prediction time for one point [s]", fontsize=18)
+plt.xlabel("Size of fitting sample", fontsize=18)
+plt.savefig(BASE_DIR / "data/Plots/Prediction_time2.png")
 plt.show()
 
 
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
-ax.scatter(training_size_array,MSE_array,marker = ".", color = "teal")
-plt.title(f"TabPFN \n MSE for given fitting sample size ",fontsize=16)
-plt.ylabel("Mean squared error [R_Earth]", fontsize=16)
-plt.xlabel("Size of training sample", fontsize=16)
-plt.savefig(BASE_DIR  / "data/Plots/MSE.png")
+ax.scatter(training_size_array,MSE_array,marker = ".",color=plt.cm.viridis(0.5))
+plt.title(f"TabPFN \n MSE for given fitting sample size ",fontsize=20)
+plt.ylabel("Mean squared error $[R_\oplus]$", fontsize=18)
+plt.xlabel("Size of fitting sample", fontsize=18)
+plt.savefig(BASE_DIR  / "data/Plots/MSE2.png")
 plt.show()
 
-
+"""
 plt.figure(figsize=(10, 8))
 ax = plt.gca()
-ax.scatter(training_size_array,R2_array,marker = ".", color = "teal")
-plt.title(f"TabPFN \n R^2 for given training sample size",fontsize=16)
-plt.ylabel("R squared", fontsize=16)
-plt.xlabel("Size of training sample", fontsize=16)
+ax.scatter(training_size_array,R2_array,marker = ".", color=plt.cm.viridis(0.5))
+plt.title(f"TabPFN \n $R^2$ for given training sample size",fontsize=20)
+plt.ylabel("$R^2$", fontsize=18)
+plt.xlabel("Size of fitting sample", fontsize=18)
 plt.savefig(BASE_DIR  / "data/Plots/R2.png")
 plt.show()
 
-
+"""
 
